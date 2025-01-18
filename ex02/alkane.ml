@@ -1,4 +1,8 @@
 class virtual alkane (input_name : string) (input_n : int) =
+  let () =
+    if input_n <= 0 then
+      raise (Invalid_argument "Number of carbon atoms must be positive")
+  in
   object (self)
     method name = input_name
 
