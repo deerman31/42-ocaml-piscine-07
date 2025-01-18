@@ -12,20 +12,40 @@ class virtual molecule (input_name : string) (input_atoms : Atom.atom list) =
       let set_symbol_cnt cnt = if cnt = 1 then "" else string_of_int cnt in
 
       let get_formula lst =
-        let rec loop acc symbol cnt lst =
-          match lst with
-          | [] -> acc ^ set_symbol_cnt cnt
-          | first :: rest ->
-              if acc = "" then loop first#symbol first#symbol 1 rest
-              else if symbol = first#symbol then loop acc symbol (cnt + 1) rest
-              else
-                loop
-                  (acc ^ set_symbol_cnt cnt ^ first#symbol)
-                  first#symbol 1 rest
-        in
-        loop "" "" 0 lst
+        if lst = [] then ""
+        else
+          let rec loop acc symbol cnt lst =
+            match lst with
+            | [] -> acc ^ set_symbol_cnt cnt
+            | first :: rest ->
+                if acc = "" then loop first#symbol first#symbol 1 rest
+                else if symbol = first#symbol then
+                  loop acc symbol (cnt + 1) rest
+                else
+                  loop
+                    (acc ^ set_symbol_cnt cnt ^ first#symbol)
+                    first#symbol 1 rest
+          in
+          loop "" "" 0 lst
       in
-      get_formula (List.sort atoms_sort_compare atoms)
+
+      let lst_c = List.filter (fun atom -> atom#symbol = "C") input_atoms in
+      if List.length lst_c = 0 then
+        get_formula (List.sort atoms_sort_compare atoms)
+      else
+        let lst_h = List.filter (fun atom -> atom#symbol = "H") input_atoms in
+        if List.length lst_h = 0 then
+          get_formula lst_c
+          ^ get_formula
+              (List.sort atoms_sort_compare
+                 (List.filter (fun atom -> atom#symbol <> "C") input_atoms))
+        else
+          get_formula lst_c ^ get_formula lst_h
+          ^ get_formula
+              (List.filter
+                 (fun atom -> atom#symbol <> "H" && atom#symbol <> "C")
+                 input_atoms)
+
 
     method virtual to_string : string
 
