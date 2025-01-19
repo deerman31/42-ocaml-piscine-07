@@ -48,4 +48,14 @@ let () =
   print_endline b1#to_string;
   print_endline (string_of_bool (b1#equals b2));
   print_endline (string_of_bool (b1#equals w));
+  print_endline "-----------------";
+
+  print_endline "TEST <o2>";
+  let o21 = new Molecule.o2 in
+  let o22 = new Molecule.o2 in
+  print_endline o21#name;
+  print_endline o21#formula;
+  print_endline o21#to_string;
+  print_endline (string_of_bool (o21#equals o22));
+  print_endline (string_of_bool (o21#equals w));
   print_endline "-----------------"

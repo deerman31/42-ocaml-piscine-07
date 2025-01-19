@@ -4,28 +4,49 @@ class virtual molecule (input_name : string) (input_atoms : Atom.atom list) =
     method name = input_name
 
     method formula : string =
+      let generate_formula lst =
+        let set_symbol_cnt cnt = if cnt = 1 then "" else string_of_int cnt in
+        if lst = [] then ""
+        else
+          let rec loop acc symbol cnt lst =
+            match lst with
+            | [] -> acc ^ set_symbol_cnt cnt
+            | first :: rest ->
+                if acc = "" then loop first#symbol first#symbol 1 rest
+                else if symbol = first#symbol then
+                  loop acc symbol (cnt + 1) rest
+                else
+                  loop
+                    (acc ^ set_symbol_cnt cnt ^ first#symbol)
+                    first#symbol 1 rest
+          in
+          loop "" "" 0 lst
+      in
+
       let atoms_sort_compare a1 a2 =
         let symbol1 = a1#symbol in
         let symbol2 = a2#symbol in
         compare (String.get symbol1 0) (String.get symbol2 0)
       in
-      let set_symbol_cnt cnt = if cnt = 1 then "" else string_of_int cnt in
 
-      let get_formula lst =
-        let rec loop acc symbol cnt lst =
-          match lst with
-          | [] -> acc ^ set_symbol_cnt cnt
-          | first :: rest ->
-              if acc = "" then loop first#symbol first#symbol 1 rest
-              else if symbol = first#symbol then loop acc symbol (cnt + 1) rest
-              else
-                loop
-                  (acc ^ set_symbol_cnt cnt ^ first#symbol)
-                  first#symbol 1 rest
-        in
-        loop "" "" 0 lst
+      let filter_atoms atoms filter_symbols =
+        List.filter (fun a -> not (List.mem a#symbol filter_symbols)) atoms
       in
-      get_formula (List.sort atoms_sort_compare atoms)
+
+      let c_lst = List.filter (fun x -> x#symbol = "C") input_atoms in
+      let h_lst = List.filter (fun x -> x#symbol = "H") input_atoms in
+      match (c_lst, h_lst) with
+      | [], [] -> generate_formula (List.sort atoms_sort_compare input_atoms)
+      | [], h -> generate_formula (List.sort atoms_sort_compare input_atoms)
+      | c, [] ->
+          generate_formula c
+          ^ generate_formula
+              (filter_atoms input_atoms [ "C" ] |> List.sort atoms_sort_compare)
+      | c, h ->
+          generate_formula c ^ generate_formula h
+          ^ generate_formula
+              (filter_atoms input_atoms [ "C"; "H" ]
+              |> List.sort atoms_sort_compare)
 
     method virtual to_string : string
 
@@ -138,4 +159,20 @@ class benzene =
       "It is found in crude oil and is one of the basic compounds in \
        petrochemistry. In some fields, it is colloquially called benzol, after \
        the German word Benzol."
+  end
+
+class o2 =
+  object (self)
+    inherit molecule "molecular oxygen" [ new Atom.oxygen; new Atom.oxygen ]
+
+    method to_string =
+      "Oxygen molecules (O₂) are diatomic molecules consisting of two oxygen \
+       atoms covalently bonded together. In Earth's atmosphere, this form of \
+       oxygen is essential for life, being crucial for cellular respiration in \
+       most organisms. The bond between the atoms is a double covalent bond, \
+       making the molecule relatively stable at room temperature. Molecular \
+       oxygen (O₂) is a colorless, odorless gas at room temperature and makes \
+       up about 21% of Earth's atmosphere. In chemical reactions, particularly \
+       in combustion, O₂ serves as a key oxidizing agent, readily reacting \
+       with other substances to form new compounds."
   end
